@@ -52,5 +52,5 @@ File.read(GIT_MODULES).each_slice(3) do |name, path, url|
   execute "git commit -a -m 'Remove submodule #{url}@#{revision}'"
 
   puts "* Replacing with braid"
-  execute "braid add #{url} --verbose -r #{revision} #{path}"
+  puts execute("braid add #{url} --verbose -r #{revision} #{path}")
 end
