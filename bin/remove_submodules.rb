@@ -21,6 +21,8 @@ module Truncation
   end
 end
 
+puts execute("git submodule update --init")
+
 File.read(GIT_MODULES).each_slice(3) do |name, path, url|
   lines = [name, path, url]
 
