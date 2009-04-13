@@ -10,7 +10,8 @@ GIT_MODULES = DIR + "/.gitmodules"
 
 def execute(str)
   puts "sh: #{str}"
-  result = `cd #{DIR}; #{str}`
+
+  result = `#{str}`
   result.strip!
   result
 end
@@ -32,9 +33,13 @@ File.read(GIT_MODULES).each_slice(3) do |name, path, url|
   path.strip!
   url.strip!
 
-  revision = execute "git rev-list HEAD | head -n 1"
-  revision.extend Truncation
-  revision = revision.truncate(7)
+  revision = nil
+
+  Dir.chdir(DIR + "/" + path) do
+    revision = execute "git rev-list HEAD | head -n 1"
+    revision.extend Truncation
+    revision = revision.truncate(7)
+  end
 
   puts ""
   puts ""
