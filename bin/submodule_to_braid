@@ -26,45 +26,53 @@ def show_submodules
   puts(execute("git submodule"))
 end
 
-puts execute("git submodule update --init")
+if File.exists?(GIT_MODULES)
+  puts execute("git submodule update --init")
 
-File.read(GIT_MODULES).each_slice(3) do |name, path, url|
-  lines = [name, path, url]
-
-  path = path.gsub(/path = ([a-z]+.*)/) { $1 }
-  url  = url.gsub(/url = (git.*)/) { $1 }
-
-  path.strip!
-  url.strip!
-
-  revision = nil
-
-  Dir.chdir(DIR + "/" + path) do
-    revision = execute "git rev-list HEAD | head -n 1"
-    revision.extend Truncation
-    revision = revision.truncate(7)
+  File.read(GIT_MODULES).each_slice(3) do |name, path, url|
+    lines = [name, path, url]
+  
+    path = path.gsub(/path = ([a-z]+.*)/) { $1 }
+    url  = url.gsub(/url = (git.*)/) { $1 }
+  
+    path.strip!
+    url.strip!
+  
+    revision = nil
+  
+    Dir.chdir(DIR + "/" + path) do
+      revision = execute "git rev-list HEAD | head -n 1"
+      revision.extend Truncation
+      revision = revision.truncate(7)
+    end
+  
+    puts ""
+    puts ""
+    puts ""
+    puts "Current Submodules:"
+    show_submodules
+    puts ""
+    puts ""
+    puts "Replacing submodule #{name}"
+    puts "Using path: #{path}"
+    puts "Using url: #{url}"
+    puts "Using revision: #{revision}"
+  
+    puts "* Removing submodule #{name}"
+    lines.each do |line|
+      File.rewrite(GIT_MODULES) { |str| str.gsub(line, "") }
+    end
+    execute "rm -rf #{path}"
+  
+    execute "git commit -a -m 'Remove submodule #{url}@#{revision}'"
+  
+    puts "* Replacing with braid"
+    puts execute("braid add #{url} --verbose -r #{revision} #{path}")
   end
 
-  puts ""
-  puts ""
-  puts ""
-  puts "Current Submodules:"
-  show_submodules
-  puts ""
-  puts ""
-  puts "Replacing submodule #{name}"
-  puts "Using path: #{path}"
-  puts "Using url: #{url}"
-  puts "Using revision: #{revision}"
-
-  puts "* Removing submodule #{name}"
-  lines.each do |line|
-    File.rewrite(GIT_MODULES) { |str| str.gsub(line, "") }
-  end
-  execute "rm -rf #{path}"
-
-  execute "git commit -a -m 'Remove submodule #{url}@#{revision}'"
-
-  puts "* Replacing with braid"
-  puts execute("braid add #{url} --verbose -r #{revision} #{path}")
+  puts "Removing .gitmodules"
+  execute "rm -rf .gitmodules"
+  execute "git commit -a -m 'Remove empty .gitmodules'"
+else
+  puts "* Couldn't find .gitmodules!!!"
 end
