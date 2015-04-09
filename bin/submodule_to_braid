@@ -29,7 +29,7 @@ end
 if File.exists?(GIT_MODULES)
   puts execute("git submodule update --init")
 
-  File.read(GIT_MODULES).each_slice(3) do |name, path, url|
+  File.readlines(GIT_MODULES).each_slice(3) do |name, path, url|
     lines = [name, path, url]
   
     path = path.gsub(/path = ([a-z]+.*)/) { $1 }
